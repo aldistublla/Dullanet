@@ -1,77 +1,91 @@
-import React, { Component } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
-import Swiper from "react-native-deck-swiper";
-import UserCard from "../components/UserCard";
-import { getOtherUsers } from "../data/localApi";
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
+import Swiper from 'react-native-deck-swiper';
+import { users } from '../data/users';
+import CustomHeader from '../components/CustomHeader';
 
-const { width } = Dimensions.get("window");
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default class HomeScreen extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      user: null,
-      others: []
-    };
-  }
+export default function HomeScreen({ navigation, loggedInUser }) {
+  const otherUsers = users.filter(user => user.id !== loggedInUser.id);
+  const [cards, setCards] = useState(otherUsers);
 
-  componentDidMount() {
-    const { user } = this.props.route.params;
-    const others = getOtherUsers(user.id);
-    this.setState({ user, others });
-  }
+  return (
+    <View style={styles.container}>
+      {/* Header me Drawer */}
+      <CustomHeader title="Dullanet" navigation={navigation} />
 
-  renderCard = (card) => <UserCard user={card} />;
-
-  render() {
-    const { user, others } = this.state;
-    if (!user) return null;
-
-    return (
-      <View style={styles.container}>
-        <Text style={styles.header}>Hello, {user.name} 💖</Text>
-
-        <View style={styles.swiperContainer}>
-          {others.length > 0 ? (
-            <Swiper
-              cards={others}
-              renderCard={this.renderCard}
-              stackSize={3}
-              backgroundColor="#fff0f5"
-              cardVerticalMargin={20}
-              animateCardOpacity
-              onSwiped={(cardIndex) => console.log("Swiped", cardIndex)}
-              onSwipedAll={() => console.log("No more users")}
-            />
-          ) : (
-            <Text style={styles.noUsers}>No other users to show 😢</Text>
-          )}
-        </View>
+      <View style={styles.swiperContainer}>
+        {cards.length > 0 ? (
+          <Swiper
+            cards={cards}
+            renderCard={(card) => (
+              <View style={styles.card}>
+                <Image source={card.avatar} style={styles.avatar} />
+                <Text style={styles.name}>{card.name}, {card.age}</Text>
+                <Text style={styles.bio}>{card.bio}</Text>
+              </View>
+            )}
+            onSwiped={(cardIndex) => console.log('Swiped:', cards[cardIndex].name)}
+            onSwipedRight={(cardIndex) => console.log('Liked:', cards[cardIndex].name)}
+            stackSize={3}              
+            stackSeparation={10}        
+            stackScale={0.95}           
+            cardVerticalMargin={0}        
+            backgroundColor="transparent"
+            animateCardOpacity
+            containerStyle={{ flex: 1 }}
+          />
+        ) : (
+          <Text style={{ fontSize: 18, color: '#ff1493' }}>No other users available.</Text>
+        )}
       </View>
-    );
-  }
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff0f5",
-    alignItems: "center",
-    paddingTop: 40
-  },
-  header: {
-    fontSize: 24,
-    color: "#ff3366",
-    marginBottom: 20
+  container: { 
+    flex: 1, 
+    backgroundColor: '#fff0f5', 
+    alignItems: 'center' 
   },
   swiperContainer: {
     flex: 1,
-    width: width
+    justifyContent: 'center',  // vertikalisht në mes
+    alignItems: 'center',      // horizontalisht në mes
   },
-  noUsers: {
-    textAlign: "center",
-    marginTop: 50,
-    color: "#ff3366",
-    fontSize: 18
-  }
+  card: {
+    width: screenWidth * 0.45,   // më të vogla
+    height: screenWidth * 0.55,  
+    borderRadius: 20,
+    backgroundColor: 'white',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 5,
+    paddingTop: 10,
+  },
+  avatar: {
+    width: '90%',
+    height: '65%',
+    borderRadius: 15,
+    marginBottom: 10,
+    resizeMode: 'cover',
+  },
+  name: {
+    fontSize: screenWidth * 0.04,
+    fontWeight: 'bold',
+    color: '#ff1493',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  bio: {
+    fontSize: screenWidth * 0.03,
+    color: '#333',
+    textAlign: 'center',
+    paddingHorizontal: 6,
+  },
 });
